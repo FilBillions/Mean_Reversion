@@ -127,7 +127,7 @@ class Mean_Rev_BackTest():
 
         def gen_signal(self):
                 model_days = self.df['Day Count'].iloc[-1] - self.df['Day Count'].iloc[0] + 1
-                # Closing price figure
+        # Closing price figure
                 self.df.index = pd.to_datetime(self.df.index).strftime('%Y-%m-%d-%H:%M')
                 fig1 = plt.figure(figsize=(12, 6))
 
@@ -192,7 +192,6 @@ class Mean_Rev_BackTest():
                         print(f" from {self.df.index[0]} to {self.df.index[-1]}")
 
         def sharpe(self):
-
                 buyhold_avg_r = float((np.mean(self.df['Return %'])))
                 buyhold_std = float((np.std(self.df['Return %'])))
                 buyhold_sharpe = (buyhold_avg_r / buyhold_std) * 252 ** 0.5
