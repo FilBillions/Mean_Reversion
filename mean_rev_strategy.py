@@ -5,16 +5,27 @@ import yfinance as yf
 from datetime import date, timedelta
 
 class Mean_Rev_BackTest():
-        def __init__(self, ma1, ticker, start = str(date.today() - timedelta(59)), end = str(date.today() - timedelta(1)), interval = "1d"):
+        def __init__(self, 
+                     ma1, 
+                     ticker, 
+                     start = str(date.today() - timedelta(59)), 
+                     end = str(date.today() - timedelta(1)), 
+                     interval = "1d", 
+                     p1 = 5, p2 = 10, 
+                     mean = 50, 
+                     p3 = 90, 
+                     p4 = 95):
+                
+                #----
                 df = yf.download(ticker, start, end, interval = interval, multi_level_index=False)
                 self.ticker = ticker
                 self.df = df
                 self.ma1 = ma1
 
-        def run_algo(self, p1 = 5, p2 = 10, mean = 50, p3 = 90, p4 = 95, print_table=True):
                 #adding day count
                 day_count = np.arange(1, len(self.df) + 1)
                 self.df['Day Count'] = day_count
+
                 #dropping unnecessary columns
                 if 'Volume' in self.df.columns:
                         self.df.drop(columns=['Volume'], inplace = True)
@@ -39,14 +50,14 @@ class Mean_Rev_BackTest():
 
                 # percentile calc
                 filtered_ratio = self.df['Ratio'][(self.df['Ratio'] > 0) & (self.df['Ratio'].notna())]
-                p = np.percentile(filtered_ratio, percentiles)
-                print(f'p1: {round(p[0], 4)} p2: {round(p[1], 4)} mean: {round(p[2], 4)} p3: {round(p[3], 4)} p4: {round(p[4], 4)}')
+                self.p = np.percentile(filtered_ratio, percentiles)
+                print(f'p1: {round(self.p[0], 4)} p2: {round(self.p[1], 4)} mean: {round(self.p[2], 4)} p3: {round(self.p[3], 4)} p4: {round(self.p[4], 4)}')
 
-                short = p[4]
-                short2 = p[3]
-                long = p[0]
-                long2 = p[1]
-                exit = p[2]
+                short = self.p[4]
+                short2 = self.p[3]
+                long = self.p[0]
+                long2 = self.p[1]
+                exit = self.p[2]
 
                 # --- CODE FOR ADDITIVE POSITION TRACKING --
                 # ---
@@ -110,20 +121,21 @@ class Mean_Rev_BackTest():
 
                 #format date as YYYY-MM-DD
                 self.df.index = pd.to_datetime(self.df.index).strftime('%Y-%m-%d-%H:%M')
-                if print_table:
-                        #options to show all rows and columns
+
+        def print_table(self, table=True, ratio=False):
+                #options to show all rows and columns
+                if ratio == True:
+                        plt.axhline(self.p[0], c= (.5,.5,.5), ls ='--')
+                        plt.axhline(self.p[1], c= (.5,.5,.5), ls ='--')
+                        plt.axhline(self.p[2], c= (.5,.5,.5), ls ='--')
+                        plt.axhline(self.p[3], c= (.5,.5,.5), ls ='--')
+                        plt.axhline(self.p[4], c= (.5,.5,.5), ls ='--')
                         pd.set_option('display.max_rows', None)
                         pd.set_option('display.max_columns', None)
                         pd.set_option('display.width', None)
                         pd.set_option('display.max_colwidth', None)
                         self.df['Ratio'].plot(legend = True)
-                        plt.axhline(p[0], c= (.5,.5,.5), ls ='--')
-                        plt.axhline(p[1], c= (.5,.5,.5), ls ='--')
-                        plt.axhline(p[2], c= (.5,.5,.5), ls ='--')
-                        plt.axhline(p[3], c= (.5,.5,.5), ls ='--')
-                        plt.axhline(p[4], c= (.5,.5,.5), ls ='--')
-                        return self.df
-                pass
+                return self.df.tail()
 
         def gen_signal(self):
                 model_days = self.df['Day Count'].iloc[-1] - self.df['Day Count'].iloc[0] + 1
