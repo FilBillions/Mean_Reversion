@@ -117,6 +117,7 @@ class Backtest():
 # Declare df outside of the loop to avoid re-downloading data each iteration
         print(f"Downloading {self.ticker}...")
         self.df = yf.download(self.ticker, start = self.universe, end = str(date.today() - timedelta(1)), interval = self.interval, multi_level_index=False, ignore_tz=True)
+        self.index1 = self.df.index[0]
         #Check if input ticker is a valid ticker
         if self.df.empty:
             print("-" * 50)
@@ -135,12 +136,12 @@ class Backtest():
             # Generate a random start date within the range
             # To stop errors from generating due to bad dates, we need to subtract end_date_range by the duration of our algorithm
             if self.interval in self.long_days_list:
-                random_input = random.randint(0, (self.end_date_range - self.universe).days)
-                input_start_date = pd.to_datetime(self.universe + timedelta(days=random_input))
+                random_input = random.randint(0, (self.end_date_range - self.index1).days)
+                input_start_date = pd.to_datetime(self.index1 + timedelta(days=random_input))
             if self.interval in self.medium_days_list or self.interval in self.short_days_list or self.interval in self.extra_short_days_list:
-                minutes = (self.end_date_range - self.universe).total_seconds() // 60
+                minutes = (self.end_date_range - self.index1).total_seconds() // 60
                 random_input = random.randint(0, int(minutes))
-                input_start_date = pd.to_datetime(self.universe + timedelta(minutes=random_input))
+                input_start_date = pd.to_datetime(self.index1 + timedelta(minutes=random_input))
             input_end_date = pd.to_datetime(input_start_date + timedelta(days=self.tie_in))
             # Check if input_end_date is valid
             if input_end_date < self.today:
@@ -158,8 +159,8 @@ class Backtest():
                 real_end_date = model.df.index[-1]  # Get the last date in the DataFrame
                 if self.ticker != 'SPY':
                     spy_model = Simple_Return(ticker=self.ticker, interval=self.interval, start=input_start_date, end=real_end_date, optional_df=self.spydf)
-                backtest_result = model.backtest(return_table=False, print_statement=False, model_return=True)
-                buy_hold_result = model.backtest(return_table=False, buy_hold=True)
+                backtest_result = model.backtest_percent_of_equity(return_table=False, print_statement=False, model_return=True)
+                buy_hold_result = model.backtest_percent_of_equity(return_table=False, buy_hold=True)
 
                 #Sharpe Ratios
                 backtest_sharpe = model.sharpe_ratio(return_model=True)

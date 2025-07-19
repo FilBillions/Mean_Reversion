@@ -227,8 +227,8 @@ def sharpe_hist(input, backtest=True, buy_hold=False, spy=False, csv_off=False):
         plt.title('Normal Distribution of Model and Buy/Hold Sharpe')
         plt.xlim(min(backtest_mini, buy_hold_mini), max(backtest_maxi, buy_hold_maxi))
     
-    if spy and 'SPY Buy/Hold Sharpe' in df.columns:
-        plt.hist(df['SPY Sharpe'], bins=50, density=True, color='orange', alpha=0.5, label='SPY Sharpe')
+    if spy and 'SPY Sharpe' in df.columns:
+        plt.hist(df['SPY Sharpe'], bins=50, density=True, color='green', alpha=0.5, label='SPY Sharpe')
         plt.xlim(spy_buy_hold_mini, spy_buy_hold_maxi)
         plt.plot(spy_buy_hold_overlay, spy_buy_hold_p, 'green', label='SPY Sharpe PDF')
         plt.axvline(spy_buy_hold_mean, color='green', linestyle='dashed', label='SPY Mean')
@@ -251,16 +251,16 @@ def sharpe_hist(input, backtest=True, buy_hold=False, spy=False, csv_off=False):
         print(f"SPY Mean: {round(spy_buy_hold_mean, 4)}")
         print(f"SPY Std: {round(spy_buy_hold_std, 4)}")
 
-    if backtest is True and buy_hold is True and spy is True and 'SPY Buy/Hold Sharpe' in df.columns:
+    if backtest is True and buy_hold is True and spy is True and 'SPY Sharpe' in df.columns:
         plt.title(f'Normal Distribution of Model and Buy/Hold Results')
         plt.xlim(min(backtest_mini, buy_hold_mini, spy_buy_hold_mini), max(backtest_maxi, buy_hold_maxi, spy_buy_hold_maxi))
     if backtest is True and buy_hold is True and spy is False:
         plt.title(f'Normal Distribution of Model and Buy/Hold Results')
         plt.xlim(min(backtest_mini, buy_hold_mini), max(backtest_maxi, buy_hold_maxi))
-    if backtest is True and spy is True and buy_hold is False and 'SPY Buy/Hold Sharpe' in df.columns:
+    if backtest is True and spy is True and buy_hold is False and 'SPY Sharpe' in df.columns:
         plt.title(f'Normal Distribution of Model and SPY Buy/Hold Results')
         plt.xlim(min(backtest_mini, spy_buy_hold_mini), max(backtest_maxi, spy_buy_hold_maxi))
-    if buy_hold is True and spy is True and backtest is False and 'SPY Buy/Hold Sharpe' in df.columns:
+    if buy_hold is True and spy is True and backtest is False and 'SPY Sharpe' in df.columns:
         plt.title(f'Normal Distribution of Asset Buy/Hold and SPY Buy/Hold Results')
         plt.xlim(min(buy_hold_mini, spy_buy_hold_mini), max(buy_hold_maxi, spy_buy_hold_maxi))
 

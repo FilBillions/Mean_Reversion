@@ -143,10 +143,12 @@ class Mean_Rev_BackTest():
         self.df.dropna(subset=['Action'], inplace=True)
 
         if return_table:
+            print(f"Total Trades: {df_actions['Action'].value_counts()['Buy to Open'] + df_actions['Action'].value_counts()['Sell to Open']}")
             print(f"Buys/Sells {df_actions['Action'].value_counts()}")
             return self.df
         
-    def backtest(self, print_statement=True, return_table=False, model_return=False, buy_hold=False, return_model_df=False):
+    def backtest_percent_of_equity(self, print_statement=True, return_table=False, model_return=False, buy_hold=False, return_model_df=False):
+        # this backtest assumes that we are using a percentage of our equity to trade, rather than a fixed amount
         initial_investment = 10000
         cash = initial_investment
         cash_spent = 0
@@ -220,6 +222,7 @@ class Mean_Rev_BackTest():
             print(f"{self.ticker} Model Result: {round(((self.df['Model Value'].iloc[-1] - self.df['Model Value'].iloc[0])/self.df['Model Value'].iloc[0]) * 100, 2)}%")
             print(f" from {self.df.index[0]} to {self.df.index[-1]}")
         if return_table:
+            pd.set_option('display.max_rows', None)  # see all rows
             return self.df
         if model_return:
             return round(((self.df['Model Value'].iloc[-1] - self.df['Model Value'].iloc[0])/self.df['Model Value'].iloc[0]) * 100, 2)
@@ -228,6 +231,93 @@ class Mean_Rev_BackTest():
         if return_model_df:
             return self.df['Model Value']
         
+    def backtest_cash(self, print_statement=True, return_table=False, model_return=False, buy_hold=False, return_model_df=False):
+        # this backtest assumes we are using 10% of our cash to trade at any given time
+        # we have a max pyramiding of 10 positions at a time
+        initial_investment = 10000
+        cash = initial_investment
+        trade_amt = 0
+        beginning_cash = 0
+        total_cash_spent = 0
+        shares = 0
+        long_value = 0
+        short_value = 0
+        portfolio_value = []
+        total_cash_plot = []
+
+        share_cost = self.df["Previous Close"].iloc[0]
+        num_shares = initial_investment / share_cost
+        self.df['Buy/Hold Value'] = num_shares * self.df['Close']
+        self.df['Model Value'] = 0
+    
+        # Iterate through the DataFrame
+        for i in range(0,len(self.df)):
+            action = self.df['Action'].iloc[i]
+            price = self.df['Previous Close'].iloc[i]
+
+            if action == 'Buy to Open' and cash > 0:
+                beginning_cash = cash + total_cash_spent
+                trade_amt = beginning_cash * 0.1
+                shares = (trade_amt / price) + shares
+                total_cash_spent += trade_amt
+                avg_price = total_cash_spent / shares
+                long_value = shares * price
+                cash = cash - trade_amt
+            elif action == 'Sell to Close' and shares > 0:
+                cash = (shares * avg_price) + ((shares * avg_price) * ((price - avg_price) / avg_price)) + cash
+                beginning_cash = 0
+                trade_amt = 0
+                shares = 0
+                total_cash_spent = 0
+                avg_price = 0
+                long_value = 0
+            elif action == 'Sell to Open' and cash > 0:
+                beginning_cash = cash + total_cash_spent
+                trade_amt = beginning_cash * 0.1
+                shares = (trade_amt / price) + shares
+                total_cash_spent += trade_amt
+                avg_price = total_cash_spent / shares
+                short_value = shares * price
+                cash = cash - trade_amt
+            elif action == 'Buy to Close' and shares > 0:
+                cash = (shares * avg_price) - ((shares * avg_price) * ((price - avg_price) / avg_price)) + cash
+                beginning_cash = 0
+                trade_amt = 0
+                shares = 0
+                total_cash_spent = 0
+                avg_price = 0
+                short_value = 0
+            elif action == "Hold (Short)":
+                short_value = shares * price
+            elif action == 'Hold (Long)':
+                long_value = shares * price
+    
+            model_value = (cash + long_value + short_value)
+            portfolio_value.append(model_value)
+        self.df['Model Value'] = portfolio_value
+                #dropping unnecessary columns
+        if 'Volume' in self.df.columns:
+                self.df.drop(columns=['Volume'], inplace = True)
+        if 'Previous Bin' in self.df.columns:
+                self.df.drop(columns=['Previous Bin'], inplace = True)
+        if 'Current Bin' in self.df.columns:
+                self.df.drop(columns=['Current Bin'], inplace = True)
+        
+        if print_statement:
+            print(f"{self.ticker} Buy/Hold Result: {round(((self.df['Buy/Hold Value'].iloc[-1] - self.df['Buy/Hold Value'].iloc[0])/self.df['Buy/Hold Value'].iloc[0]) * 100, 2)}%")
+            print(f"{self.ticker} Model Result: {round(((self.df['Model Value'].iloc[-1] - self.df['Model Value'].iloc[0])/self.df['Model Value'].iloc[0]) * 100, 2)}%")
+            print(f" from {self.df.index[0]} to {self.df.index[-1]}")
+        if return_table:
+            # see all rows
+            pd.set_option('display.max_rows', None)
+            return self.df
+        if model_return:
+            return round(((self.df['Model Value'].iloc[-1] - self.df['Model Value'].iloc[0])/self.df['Model Value'].iloc[0]) * 100, 2)
+        if buy_hold:
+            return round(((self.df['Buy/Hold Value'].iloc[-1] - self.df['Buy/Hold Value'].iloc[0])/self.df['Buy/Hold Value'].iloc[0]) * 100, 2)
+        if return_model_df:
+            return self.df['Model Value'] 
+              
     def sharpe_ratio(self, return_model=True, return_buy_hold=False):
         # factor answers the question: how many of this interval are in the total timespan
         if self.interval == "1d":
