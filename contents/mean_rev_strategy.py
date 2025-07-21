@@ -82,7 +82,6 @@ class Mean_Rev_BackTest():
         prev_action = 'No Action'  # Initialize previous action
         next_action = None  # This will hold the action for the next day
         action = 'No Action'  # <-- Ensure action is always initialized
-        print(f"Ratio boundaries: long: {self.long}, long2: {self.long2}, exit: {self.exit}, short: {self.short}, short2: {self.short2}")
         while post_idx < (len(self.df) - len(data_cutoff)):
             #update the conditional probability table every number of steps
             start_date = self.df.index[post_idx]
@@ -222,7 +221,6 @@ class Mean_Rev_BackTest():
             print(f"{self.ticker} Model Result: {round(((self.df['Model Value'].iloc[-1] - self.df['Model Value'].iloc[0])/self.df['Model Value'].iloc[0]) * 100, 2)}%")
             print(f" from {self.df.index[0]} to {self.df.index[-1]}")
         if return_table:
-            pd.set_option('display.max_rows', None)  # see all rows
             return self.df
         if model_return:
             return round(((self.df['Model Value'].iloc[-1] - self.df['Model Value'].iloc[0])/self.df['Model Value'].iloc[0]) * 100, 2)
@@ -230,7 +228,7 @@ class Mean_Rev_BackTest():
             return round(((self.df['Buy/Hold Value'].iloc[-1] - self.df['Buy/Hold Value'].iloc[0])/self.df['Buy/Hold Value'].iloc[0]) * 100, 2)
         if return_model_df:
             return self.df['Model Value']
-        
+
     def backtest_cash(self, print_statement=True, return_table=False, model_return=False, buy_hold=False, return_model_df=False):
         # this backtest assumes we are using 10% of our cash to trade at any given time
         # we have a max pyramiding of 10 positions at a time
@@ -243,7 +241,6 @@ class Mean_Rev_BackTest():
         long_value = 0
         short_value = 0
         portfolio_value = []
-        total_cash_plot = []
 
         share_cost = self.df["Previous Close"].iloc[0]
         num_shares = initial_investment / share_cost
@@ -309,7 +306,6 @@ class Mean_Rev_BackTest():
             print(f" from {self.df.index[0]} to {self.df.index[-1]}")
         if return_table:
             # see all rows
-            pd.set_option('display.max_rows', None)
             return self.df
         if model_return:
             return round(((self.df['Model Value'].iloc[-1] - self.df['Model Value'].iloc[0])/self.df['Model Value'].iloc[0]) * 100, 2)

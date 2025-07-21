@@ -38,7 +38,7 @@ class Simple_Return():
         elif self.interval == "1mo":
             annualized_factor = 12
         else:
-            raise ValueError("Unsupported interval for Sharpe Ratio calculation. Use '1d', '1wk', or '1mo'.")
+            annualized_factor = 1
         buy_hold_descriptives = stats.describe(self.df['Close'].pct_change().dropna())
         buy_hold_mean = buy_hold_descriptives.mean
         buy_hold_std = buy_hold_descriptives.variance ** 0.5
